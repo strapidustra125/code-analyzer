@@ -22,8 +22,9 @@ public:
         unsigned int comments   = 0;
         unsigned int codes      = 0;
         unsigned int spaces     = 0;
+        unsigned int all        = 0;
 
-    } counters;
+    } counters_global;
 
 private:
 
@@ -43,6 +44,10 @@ public:
 private:
 
     bool _dirStat(const std::string & path, DirStat & dirStat);
+
+    bool _parseFile(const std::string & path, Counters & counters);
+
+    void _simplifyLine(std::string & line);
 
 };
 
