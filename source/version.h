@@ -23,7 +23,7 @@
 const std::vector<int> partialVersion =
 {
     1,  // Номер MVP
-    2   // Номер коммита
+    3   // Номер коммита
 };
 
 

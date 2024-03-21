@@ -36,7 +36,7 @@ void arg::processArgument_version()
 int main(int argc, char * argv[])
 {
     arg::ArgumentReader::read(argc, argv);
-
+    
     base::Analyzer analyzer;
 
     return analyzer.analyze(CUR_DIR + "../source/");

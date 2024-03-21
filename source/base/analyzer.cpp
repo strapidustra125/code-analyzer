@@ -28,11 +28,41 @@ bool Analyzer::analyze(const std::string & path)
         return false;
     }
 
-    Counters counters;
-    _parseFile(path + "/" + "main.cpp", counters);
+    std::cout << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "\"" << path << "\" statistics:" << std::endl;
 
     DirStat dirStat;
-    // _dirStat(path, dirStat);
+    _dirStat(path, dirStat);
+
+    std::cout << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "Total .c/.cpp stat. Lines : " << counters_global_cpp.all << std::endl
+              << "    code     - " << counters_global_cpp.codes << std::endl
+              << "    comments - " << counters_global_cpp.comments << std::endl
+              << "    space    - " << counters_global_cpp.spaces << std::endl;
+
+    std::cout << "Total .h/.hpp stat. Lines : " << counters_global_h.all << std::endl
+              << "    code     - " << counters_global_h.codes << std::endl
+              << "    comments - " << counters_global_h.comments << std::endl
+              << "    space    - " << counters_global_h.spaces << std::endl;
+
+    std::cout << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "Total statistics. Lines : " << counters_global_h.all + counters_global_cpp.all << std::endl
+              << "    code     - " << counters_global_h.codes + counters_global_cpp.codes << std::endl
+              << "    comments - " << counters_global_h.comments + counters_global_cpp.comments << std::endl
+              << "    space    - " << counters_global_h.spaces + counters_global_cpp.spaces << std::endl;
+
+    std::cout << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+    std::cout << std::endl;
 
     return true;
 }
@@ -71,70 +101,95 @@ bool Analyzer::_dirStat(const std::string & path, DirStat & dirStat)
         tab = tab.substr(0, tab.size() - 4);
     }
 
-    for(auto file : files_cpp)  std::cout << tab << "-> " << file.filename().string() << std::endl;
-    for(auto file : files_hpp)  std::cout << tab << "-> " << file.filename().string() << std::endl;
-    for(auto file : files_c)    std::cout << tab << "-> " << file.filename().string() << std::endl;
-    for(auto file : files_h)    std::cout << tab << "-> " << file.filename().string() << std::endl;
+    for(auto file : files_cpp)
+    {
+        FileInfo info;
+        info.path = file;
+        if(!_parseFile(info)) return false;
+        std::cout << tab << "-> " << info.dump() << std::endl;
+        counters_global_cpp += info.counters;
+    }
+
+    for(auto file : files_hpp)
+    {
+        FileInfo info;
+        info.path = file;
+        if(!_parseFile(info)) return false;
+        std::cout << tab << "-> " << info.dump() << std::endl;
+        counters_global_h += info.counters;
+    }
+
+    for(auto file : files_c)
+    {
+        FileInfo info;
+        info.path = file;
+        if(!_parseFile(info)) return false;
+        std::cout << tab << "-> " << info.dump() << std::endl;
+        counters_global_cpp += info.counters;
+    }
+
+    for(auto file : files_h)
+    {
+        FileInfo info;
+        info.path = file;
+        if(!_parseFile(info)) return false;
+        std::cout << tab << "-> " << info.dump() << std::endl;
+        counters_global_h += info.counters;
+    }
 
     return true;
 }
 
-bool Analyzer::_parseFile(const std::string & path, Counters & counters)
+/// Подсчет строк файла: комментарии, строки кода и пустые строки
+bool Analyzer::_parseFile(FileInfo & file)
 {
-    if(!FS::File::isExists(path))
+    if(!FS::File::isExists(file.path))
     {
-        std::cerr << "Unable to find file [" << path << "]" << std::endl;
+        std::cerr << "Unable to find file [" << file.path << "]" << std::endl;
         return false;
     }
 
-    std::ifstream file(path, std::ios::in | std::ios::binary);
+    std::ifstream fin(file.path, std::ios::in | std::ios::binary);
 
-    if(!file.is_open())
+    if(!fin.is_open())
     {
-        std::cerr << "Unable to read file [" << path << "]: file was not opened" << std::endl;
+        std::cerr << "Unable to read file [" << file.path << "]: file was not opened" << std::endl;
         return false;
     }
 
     bool longComment = false;
-    while(!file.eof())
+    while(!fin.eof())
     {
-        std::cout << "--------------------------" << std::endl;
 
-        counters.all++;
+        file.counters.all++;
 
         std::string line = "";
-        std::getline(file, line);
-
-        std::cout << "[" << line << "]" << std::endl;
+        std::getline(fin, line);
 
         _simplifyLine(line);
 
         if(line[0] == '/' && line[1] == '*') longComment = true;
-        if(line[line.size() - 1] == '*' && line[line.size() - 2] == '/') longComment = true;
 
-        if(line == "")
+        if(line[line.size() - 2] == '*' && line[line.size() - 1] == '/')
         {
-            counters.spaces++;
-            std::cout << " | spaces" << std::endl;
+            longComment = false;
+            file.counters.comments++;
+            continue;
         }
-        else if(line[0] == '/' && line[1] == '/')
+
+        if(longComment)
         {
-            counters.comments++;
-            std::cout << " | comments" << std::endl;
+            file.counters.comments++;
+            continue;
         }
-        else 
-        {
-            counters.codes++;
-            std::cout << " | codes" << std::endl;
-        }
+
+        if(line == "") file.counters.spaces++;
+        else if(line[0] == '/' && line[1] == '/') file.counters.comments++;
+        else file.counters.codes++;
     }
 
-    file.close();
-
-    std::cout << "all: "        << counters.all << std::endl;
-    std::cout << "spaces: "     << counters.spaces << std::endl;
-    std::cout << "comments: "   << counters.comments << std::endl;
-    std::cout << "codes: "      << counters.codes << std::endl;
+    fin.close();
+    return true;
 }
 
 /// Отрезает от строки незначащие пробелы и табуляции
@@ -142,34 +197,31 @@ void Analyzer::_simplifyLine(std::string & line)
 {
     if(line == "") return;
 
-    std::cout << "1:" << "[" << line << "]" << std::endl;
-
     // Откусить пробелы и табы в начале
-    for(int i = 0; i < line.size(); i++)
-    {
-        if(line[i] != ' ' && line[i] != '\t')
-        {
-            line.substr(i, line.size());
-            std::cout << "sub: " << i << " - " << line.size() << std::endl;
-            break;
-        }
-    }
 
-    std::cout << "2:" << "[" << line << "]" << std::endl;
+    if(line[0] == ' ')
+        for(int i = 0; i < line.size(); i++)
+        {
+            if(line[i] != ' ' && line[i] != '\t')
+            {
+                line = line.substr(i, line.size());
+                break;
+            }
+        }
 
     // Откусить пробелы и табы в конце
-    for(int i = line.size() - 1; i <= 0; i--)
-    {
-        if(line[i] != ' ' && line[i] != '\t')
-        {
-            line.substr(0, i);
-            std::cout << "sub: " << 0 << " - " << i << std::endl;
-            std::cout << "3:" << "[" << line << "]" << std::endl;
-            return;
-        }
-    }
 
-    line = "";
+    if(line[line.size() - 1] == ' ')
+        for(int i = line.size() - 1; i >= 0; i--)
+        {
+            if(line[i] != ' ' && line[i] != '\t')
+            {
+                line = line.substr(0, i + 1);
+                break;
+            }
+        }
+
+    if(line[line.size() - 1] == ' ' || line[0] == ' ') line = "";
 }
 
 

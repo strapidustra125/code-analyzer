@@ -146,9 +146,26 @@ bool FS::Dir::getFilesPaths(const std::string & path, std::vector<fs::path> & fi
         if (!fs::is_regular_file(entry.path(), err)) continue;
 
         fs::path filePath = entry.path().string();
-        if(!filter.empty() && filePath.filename().string().find(filter) == std::string::npos) continue;
+        std::string name = filePath.filename().string();
 
-        filePaths.push_back(filePath);
+        if(filter.size() > name.size())
+        {
+            std::cerr << "File [" << name << "] less then extension [" << filter << "]" << std::endl;
+            return false;
+        }
+
+        bool found = true;
+        int j = name.size() - 1;
+        for(int i = filter.size() - 1; i >= 0; i--)
+        {
+            if(name[j--] != filter[i])
+            {
+                found = false;
+                break;
+            }
+        }
+
+        if(found) filePaths.push_back(filePath);
     }
 
     return true;
