@@ -8,16 +8,9 @@
 namespace base {
 
 
-Analyzer::Analyzer()
-{
+Analyzer::Analyzer() {}
 
-}
-
-
-Analyzer::~Analyzer()
-{
-
-}
+Analyzer::~Analyzer() {}
 
 
 bool Analyzer::analyze(const std::string & path)
@@ -200,7 +193,7 @@ void Analyzer::_simplifyLine(std::string & line)
     // Откусить пробелы и табы в начале
 
     if(line[0] == ' ')
-        for(int i = 0; i < line.size(); i++)
+        for(unsigned int i = 0; i < line.size(); i++)
         {
             if(line[i] != ' ' && line[i] != '\t')
             {

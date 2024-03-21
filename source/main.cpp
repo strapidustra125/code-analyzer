@@ -1,7 +1,7 @@
 /**
  * \file
  * \brief
- */   
+ */
 
 
 #include <string>
@@ -36,8 +36,14 @@ void arg::processArgument_version()
 int main(int argc, char * argv[])
 {
     arg::ArgumentReader::read(argc, argv);
-    
+
+    if(argc != 2)
+    {
+        std::cerr << "Please, give counting directory as a parameter" << std::endl;
+        return -1;
+    }
+
     base::Analyzer analyzer;
 
-    return analyzer.analyze(CUR_DIR + "../source/");
+    return analyzer.analyze(argv[1]);
 }
