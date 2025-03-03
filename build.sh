@@ -20,7 +20,6 @@ function LOG {
 LOG "Building ${PROJECT}..."
 
 # Удаляем весь мусор из build и release
-cd ..
 rm -rf build
 rm -rf release
 
@@ -35,7 +34,7 @@ LOG "Starting \"cmake\" for \"${PROJECT}\" project:"
 
 # Запуск утилиты CMAKE
 # .. - директория, в которой лежит CMakeLists.txt
-cmake  ..
+cmake ..
 
 rc=$?
 if [ ${rc} != 0 ]
