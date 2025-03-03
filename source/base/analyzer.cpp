@@ -8,11 +8,6 @@
 namespace base {
 
 
-Analyzer::Analyzer() {}
-
-Analyzer::~Analyzer() {}
-
-
 bool Analyzer::analyze(const std::string & path)
 {
     if(!FS::Dir::isExists(path))

@@ -30,9 +30,6 @@ public:
 
     public:
 
-        Counters() {};
-        ~Counters() {};
-
         Counters operator += (Counters & other)
         {
             this->comments += other.comments;
@@ -66,9 +63,6 @@ private:
 
     public:
 
-        FileInfo() {};
-        ~FileInfo() {};
-
         std::string dump()
         {
             std::stringstream ss;
@@ -80,9 +74,6 @@ private:
     };
 
 public:
-
-    Analyzer();
-    ~Analyzer();
 
     bool analyze(const std::string & path);
 
